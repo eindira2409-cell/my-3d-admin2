@@ -260,7 +260,7 @@
             renderClientsList();
         }
 
-        // Рендер левой колонки (Список)
+        // Рендер левой колонки (Список) - ИСПРАВЛЕНА ошибка сравнения ID
         function renderClientsList() {
             const container = document.getElementById('clientsListContainer');
             if (filteredList.length === 0) {
@@ -274,7 +274,8 @@
             }
 
             container.innerHTML = filteredList.map(client => {
-                const isSelected = activeClient && activeClient.id === client.id;
+                // Приводим ID к строке для 100% точного сравнения
+                const isSelected = activeClient && activeClient.id.toString() === client.id.toString();
                 const dateText = client.created_at ? new Date(client.created_at).toLocaleDateString('ru-RU') : 'Нет даты';
                 const isDemo = client.id.toString().startsWith('demo');
                 
@@ -299,10 +300,12 @@
             lucide.createIcons();
         }
 
-        // Клик по пользователю
+        // Клик по пользователю - ИСПРАВЛЕНА ошибка сравнения ID
         function selectClient(id) {
             const sourceList = isDemoMode ? mockDemoClients : clientsList;
-            activeClient = sourceList.find(c => c.id === id);
+            
+            // Находим клиента, приводя все ID к типу String
+            activeClient = sourceList.find(c => c.id.toString() === id.toString());
             
             if (!activeClient) return;
 
@@ -357,7 +360,7 @@
             if (activeTab === 'level1') {
                 const data = activeClient.level1_data;
                 if (!data || !Array.isArray(data)) {
-                    container.innerHTML = `<div class="text-sm text-slate-400">Данные психологического профиля отсутствуют у этого клиента.</div>`;
+                    container.innerHTML = `<div class="text-sm text-slate-400 p-6 text-center">Данные психологического профиля отсутствуют у этого клиента.</div>`;
                     return;
                 }
 
@@ -387,7 +390,7 @@
             if (activeTab === 'level2') {
                 const data = activeClient.level2_data;
                 if (!data || !Array.isArray(data)) {
-                    container.innerHTML = `<div class="text-sm text-slate-400">Данные матрицы энергий отсутствуют у этого клиента.</div>`;
+                    container.innerHTML = `<div class="text-sm text-slate-400 p-6 text-center">Данные матрицы энергий отсутствуют у этого клиента.</div>`;
                     return;
                 }
 
@@ -421,7 +424,7 @@
             if (activeTab === 'level3') {
                 const data = activeClient.level3_data;
                 if (!data || !Array.isArray(data)) {
-                    container.innerHTML = `<div class="text-sm text-slate-400">Данные чек-апа здоровья отсутствуют у этого клиента.</div>`;
+                    container.innerHTML = `<div class="text-sm text-slate-400 p-6 text-center">Данные чек-апа здоровья отсутствуют у этого клиента.</div>`;
                     return;
                 }
 
