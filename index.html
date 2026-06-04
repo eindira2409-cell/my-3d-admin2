@@ -6,456 +6,443 @@
     <title>Панель управления разборами</title>
     <!-- Подключаем Tailwind CSS для красивого дизайна -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Подключаем официальную библиотеку Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Подключаем пакет иконок Lucide -->
+    <!-- Подключаем иконки Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Кастомный скроллбар для аккуратного вида */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 3px;
-        }
+        /* Небольшие улучшения скроллбара */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .hidden { display: none !important; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
 
     <!-- Шапка панели -->
-    <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-        <div class="flex items-center gap-3">
+    <header class="bg-white border-b border-slate-200 px-4 md:px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+        <div class="flex items-center gap-2 md:gap-3">
             <div class="bg-[#D37B85] p-2 rounded-lg text-white">
                 <i data-lucide="activity" class="w-5 h-5"></i>
             </div>
-            <h1 class="text-lg md:text-xl font-semibold text-slate-900">«Панель управления разборами»</h1>
+            <h1 class="text-lg md:text-xl font-bold text-slate-900 truncate max-w-[200px] md:max-w-none">«Панель управления разборами»</h1>
         </div>
         
-        <div class="flex items-center gap-4">
-            <!-- Переключатель демонстрационных данных -->
-            <button id="demoToggleBtn" onclick="toggleDemoMode()" class="text-xs px-3 py-1.5 rounded-lg border font-medium transition-all flex items-center gap-1.5 bg-white hover:bg-slate-50 border-slate-200 text-slate-600">
+        <div class="flex items-center gap-2 md:gap-4">
+            <!-- Кнопка переключения демо-режима -->
+            <button id="demoToggleBtn" onclick="toggleDemoMode()" class="text-xs px-2 md:px-3 py-1.5 rounded-lg border font-medium transition-all flex items-center gap-1.5 bg-white hover:bg-slate-50 border-slate-200 text-slate-600">
                 <i data-lucide="database" class="w-3.5 h-3.5"></i>
-                <span id="demoToggleText">Включить Демо-данные</span>
+                <span class="hidden md:inline" id="demoToggleText">Включить Демо-данные</span>
             </button>
-
-            <div class="text-sm text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full hidden sm:block">
-                Анкет в списке: <span id="clientCount" class="font-bold text-slate-900">0</span>
+            <div class="text-xs md:text-sm text-slate-500 bg-slate-100 px-2 md:px-3 py-1.5 rounded-full whitespace-nowrap">
+                Анкет: <span id="totalCount" class="font-bold text-slate-900">0</span>
             </div>
         </div>
     </header>
 
     <!-- Основной контейнер -->
-    <main class="flex-1 p-4 md:p-6 flex flex-col lg:flex-row gap-6 max-w-[1400px] mx-auto w-full">
+    <main class="flex-1 p-4 md:p-6 flex flex-col lg:flex-row gap-6 max-w-[1400px] mx-auto w-full relative">
         
         <!-- Левая колонка: Список клиентов -->
-        <div class="w-full lg:w-1/3 flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden h-[calc(100vh-140px)]">
+        <div id="listContainer" class="w-full lg:w-1/3 flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden h-[calc(100vh-100px)] lg:h-[calc(100vh-120px)]">
             
             <!-- Поиск -->
             <div class="p-4 border-b border-slate-200 bg-slate-50/50">
                 <div class="relative">
-                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                    <input
-                        id="searchInput"
-                        type="text"
-                        placeholder="Поиск по имени, телефону или почте..."
-                        oninput="handleSearch()"
-                        class="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D37B85] focus:border-[#D37B85] transition-shadow text-sm"
-                    />
+                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                    <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Поиск по имени, телефону или почте..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D37B85] focus:border-[#D37B85] transition-shadow text-sm">
                 </div>
             </div>
 
-            <!-- Область списка клиентов -->
-            <div id="clientsListContainer" class="overflow-y-auto flex-1 divide-y divide-slate-100">
-                <!-- Сюда будут рендериться клиенты -->
-                <div class="p-8 text-center text-slate-400">
-                    <i data-lucide="loader-2" class="w-8 h-8 animate-spin mx-auto text-[#D37B85] mb-2"></i>
-                    <span class="text-sm">Подключение к базе данных...</span>
+            <!-- Список записей -->
+            <div class="overflow-y-auto flex-1 relative">
+                <!-- Индикатор загрузки -->
+                <div id="loadingIndicator" class="absolute inset-0 bg-white flex flex-col items-center justify-center text-slate-500 gap-2 z-10">
+                    <i data-lucide="loader-2" class="w-8 h-8 animate-spin text-[#D37B85]"></i>
+                    <span class="text-sm">Загрузка базы данных...</span>
                 </div>
+                <!-- Индикатор ошибки -->
+                <div id="errorIndicator" class="hidden absolute inset-0 bg-white flex-col items-center justify-center text-center p-6 z-10">
+                    <span id="errorMsg" class="text-rose-500 text-sm mb-4"></span>
+                    <button onclick="toggleDemoMode(true)" class="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-semibold">Показать демо-данные</button>
+                </div>
+
+                <table class="w-full text-left border-collapse">
+                    <tbody id="clientsTableBody" class="divide-y divide-slate-100">
+                        <!-- Сюда вставляются клиенты из JS -->
+                    </tbody>
+                </table>
             </div>
         </div>
 
         <!-- Правая колонка: Детальная карточка разбора -->
-        <div id="detailContainer" class="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[calc(100vh-140px)]">
-            <!-- Начальное состояние (когда никто не выбран) -->
+        <div id="detailContainer" class="hidden lg:flex flex-1 flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden h-[calc(100vh-100px)] lg:h-[calc(100vh-120px)] absolute lg:relative inset-4 lg:inset-0 z-20">
+            
+            <!-- Пустое состояние (когда никто не выбран) -->
             <div id="emptyState" class="flex-1 flex flex-col items-center justify-center text-slate-400 p-6 text-center">
                 <div class="bg-slate-50 p-6 rounded-full mb-4">
-                    <i data-lucide="user" class="w-12 h-12 text-slate-300"></i>
+                    <i data-lucide="user" class="w-16 h-16 text-slate-300"></i>
                 </div>
-                <h3 class="text-lg font-medium text-slate-600 mb-2">Выберите клиента</h3>
-                <p class="max-w-md text-sm text-slate-400">Кликните на карточку клиента из списка слева, чтобы открыть результаты его психологического профиля, матрицы энергий и чек-ап.</p>
+                <h3 class="text-xl font-medium text-slate-600 mb-2">Выберите клиента</h3>
+                <p class="max-w-md">Кликните на карточку клиента из списка слева, чтобы открыть результаты его психологического профиля, матрицы энергий и чек-ап.</p>
             </div>
 
             <!-- Карточка с данными (скрыта по умолчанию) -->
-            <div id="clientCard" class="hidden flex-1 flex flex-col overflow-hidden">
+            <div id="clientCard" class="hidden flex-1 flex-col overflow-hidden">
                 <!-- Шапка карточки -->
-                <div class="bg-slate-50 border-b border-slate-200 p-6 relative">
-                    <button onclick="closeDetails()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 transition-colors bg-white p-1 rounded-md shadow-sm border border-slate-200">
-                        <i data-lucide="x" class="w-4 h-4"></i>
+                <div class="bg-slate-50 border-b border-slate-200 p-4 md:p-6 relative">
+                    <!-- Кнопка "Назад" для мобилок и крестик для ПК -->
+                    <button onclick="closeDetails()" class="absolute top-4 right-4 text-slate-500 hover:text-slate-700 transition-colors bg-white p-2 rounded-md shadow-sm border border-slate-200 z-10 flex items-center gap-1">
+                        <i data-lucide="arrow-left" class="w-4 h-4 lg:hidden"></i>
+                        <span class="text-xs font-medium pr-1 lg:hidden">Назад</span>
+                        <i data-lucide="x" class="w-4 h-4 hidden lg:block"></i>
                     </button>
                     
-                    <div class="flex gap-4 items-start">
-                        <div id="clientAvatar" class="w-14 h-14 bg-rose-100 text-[#D37B85] rounded-2xl flex items-center justify-center text-xl font-bold shrink-0">
-                            К
+                    <div class="flex gap-3 md:gap-4 items-start pr-20 md:pr-8">
+                        <div id="clientAvatar" class="w-12 h-12 md:w-14 md:h-14 bg-rose-100 text-[#D37B85] rounded-2xl flex items-center justify-center text-xl font-bold shrink-0">
+                            А
                         </div>
                         <div>
-                          <h2 id="clientName" class="text-xl font-bold text-slate-900 mb-2">Куралай</h2>
+                          <h2 id="clientName" class="text-lg md:text-xl font-bold text-slate-900 mb-2">Имя Фамилия</h2>
                           <div class="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-slate-600">
-                            <div class="flex items-center gap-1"><i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i> <span id="clientBirth">16.03.2001</span></div>
-                            <div class="flex items-center gap-1"><i data-lucide="user-check" class="w-3.5 h-3.5 text-slate-400"></i> <span id="clientGender">Женский</span></div>
-                            <div class="flex items-center gap-1"><i data-lucide="phone" class="w-3.5 h-3.5 text-slate-400"></i> <span id="clientPhone">87052306477</span></div>
-                            <div class="flex items-center gap-1"><i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400"></i> <span id="clientMail">kkesikova@inbox.ru</span></div>
+                              <div class="flex items-center gap-1"><i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i> <span id="clientDob"></span></div>
+                              <div class="flex items-center gap-1"><i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i> <span id="clientGender"></span></div>
+                              <div class="flex items-center gap-1"><i data-lucide="phone" class="w-3.5 h-3.5 text-slate-400"></i> <span id="clientPhone"></span></div>
+                              <div class="flex items-center gap-1"><i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400"></i> <span id="clientEmail"></span></div>
                           </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Вкладки управления -->
-                <div class="flex border-b border-slate-200 px-6 pt-3 gap-6 bg-white">
-                    <button id="tab-level1" onclick="switchTab('level1')" class="pb-3 text-sm font-semibold flex items-center gap-1.5 border-b-2 border-[#D37B85] text-[#D37B85] transition-colors">
+                <!-- Вкладки (Табы) -->
+                <div class="flex border-b border-slate-200 px-4 md:px-6 pt-3 gap-4 md:gap-6 bg-white overflow-x-auto">
+                    <button id="tab-level1" onclick="switchTab('level1')" class="pb-3 text-sm font-semibold flex items-center gap-1.5 border-b-2 border-[#D37B85] text-[#D37B85] transition-colors whitespace-nowrap">
                         <i data-lucide="brain" class="w-4 h-4"></i> 1. Психология
                     </button>
-                    <button id="tab-level2" onclick="switchTab('level2')" class="pb-3 text-sm font-semibold flex items-center gap-1.5 border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">
+                    <button id="tab-level2" onclick="switchTab('level2')" class="pb-3 text-sm font-semibold flex items-center gap-1.5 border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors whitespace-nowrap">
                         <i data-lucide="sparkles" class="w-4 h-4"></i> 2. Энергии
                     </button>
-                    <button id="tab-level3" onclick="switchTab('level3')" class="pb-3 text-sm font-semibold flex items-center gap-1.5 border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">
+                    <button id="tab-level3" onclick="switchTab('level3')" class="pb-3 text-sm font-semibold flex items-center gap-1.5 border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors whitespace-nowrap">
                         <i data-lucide="heart-pulse" class="w-4 h-4"></i> 3. Чек-ап
                     </button>
                 </div>
 
-                <!-- Контент вкладок -->
-                <div id="tabContent" class="p-6 overflow-y-auto flex-1 bg-slate-50/30">
-                    <!-- Рендерится динамически через JS -->
+                <!-- Содержимое вкладок -->
+                <div class="p-4 md:p-6 overflow-y-auto flex-1 bg-slate-50/50">
+                    
+                    <!-- Уровень 1 -->
+                    <div id="content-level1" class="space-y-4 hidden">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">Психологический профиль</h3>
+                        <div id="level1-data-container"></div>
+                    </div>
+
+                    <!-- Уровень 2 -->
+                    <div id="content-level2" class="space-y-6 hidden">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">Матрица энергий</h3>
+                        <div id="level2-data-container"></div>
+                    </div>
+
+                    <!-- Уровень 3 -->
+                    <div id="content-level3" class="space-y-4 hidden">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">Панель Чек-апа (Здоровье)</h3>
+                        <div id="level3-data-container"></div>
+                        <div class="mt-6 p-4 bg-red-50 border border-red-100 rounded-lg text-sm text-red-600">
+                            <strong>Важное примечание:</strong> Данный чек-ап не является медицинским диагнозом. Необходима консультация специалиста.
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
-
     </main>
 
     <script>
-        // Инициализация базы данных Supabase
-        const supabaseUrl = 'https://xdzhilkkvrxaxmdrdsvm.supabase.co';
-        const supabaseAnonKey = 'sb_publishable_mnSmtLBsziAHP6blhhAHdw_atZ4nSyd';
-        const db = supabase.createClient(supabaseUrl, supabaseAnonKey);
+        // Инициализация иконок
+        lucide.createIcons();
 
-        // Переменные состояния приложения
+        // Настройки Supabase
+        const SUPABASE_URL = 'https://xdzhilkkvrxaxmdrdsvm.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_mnSmtLBsziAHP6blhhAHdw_atZ4nSyd';
+
+        // Состояние приложения
         let clientsList = [];
-        let filteredList = [];
+        let isDemoMode = false;
         let activeClient = null;
         let activeTab = 'level1';
-        let isDemoMode = false;
+        let searchQuery = '';
 
-        // Демо-данные (на случай пустой базы данных)
+        // Демо-данные
         const mockDemoClients = [
-          { 
-            id: 'demo-1', 
-            name: 'Куралай (Демо)', 
-            birth_date: '16.03.2001', 
-            gender: 'Женский',
-            phone: '87052306477', 
-            email: 'kkesikova@inbox.ru',
-            created_at: new Date().toISOString(), 
-            level1_data: [
-              { letter: 'A', name: 'Аккуратность', score: -40, desc: 'Внимание, фокус, рассеянность' },
-              { letter: 'B', name: 'Счастье', score: 10, desc: 'Позитивность, радость, депрессия' },
-              { letter: 'C', name: 'Самообладание', score: -30, desc: 'Спокойствие, контроль, нервозность' },
-              { letter: 'D', name: 'Уверенность', score: -10, desc: 'Предсказуемость, неуверенность' },
-              { letter: 'E', name: 'Энергия', score: -20, desc: 'Активность, жизненная сила' },
-              { letter: 'F', name: 'Настойчивость', score: 10, desc: 'Целеустремленность, упорство' },
-              { letter: 'G', name: 'Оборона', score: 0, desc: 'Способность держать давление' },
-              { letter: 'H', name: 'Приоритет', score: 30, desc: 'Тактика, объективность' },
-              { letter: 'I', name: 'Эмпатия', score: -10, desc: 'Теплота, чуткость' },
-              { letter: 'J', name: 'Общение', score: 50, desc: 'Яркость, открытость' }
-            ],
-            level2_data: [
-              { block: 1, title: 'День рождения', digit: 6, score: 80, type: 'Светлая сторона (+)', color: 'bg-emerald-500' },
-              { block: 2, title: 'Месяц рождения', digit: 7, score: 60, type: 'Теневая сторона (-)', color: 'bg-orange-500' },
-              { block: 3, title: 'Последняя цифра года', digit: 6, score: 70, type: 'Теневая сторона (-)', color: 'bg-red-500' },
-              { block: 4, title: 'Код судьбы', digit: 1, score: 60, type: 'Теневая сторона (-)', color: 'bg-orange-600' }
-            ],
-            level3_data: [
-              { letter: 'A', name: 'Железо / Кислород', score: 75, desc: 'Уровень тканевой гипоксии', color: 'bg-rose-500' },
-              { letter: 'B', name: 'Углеводный обмен', score: 62, desc: 'Риск инсулинорезистентности', color: 'bg-rose-500' },
-              { letter: 'C', name: 'Ресурс щитовидной железы', score: 49, desc: 'Энергообмен', color: 'bg-amber-400' },
-              { letter: 'D', name: 'Нервная система', score: 62, desc: 'Уровень истощения / выгорания', color: 'bg-rose-500' },
-              { letter: 'E', name: 'Минералы и Иммунитет', score: 50, desc: 'Клеточные дефициты', color: 'bg-amber-400' }
-            ]
-          }
+            { 
+                id: 'demo-1', name: 'Куралай Кесикова (Демо)', birth_date: '16.03.2001', gender: 'Женский', phone: '87052306477', email: 'kkesikova@inbox.ru', created_at: new Date().toISOString(), 
+                level1_data: [
+                    { letter: 'A', name: 'Аккуратность', score: -40, desc: 'Внимание, фокус, рассеянность' },
+                    { letter: 'B', name: 'Счастье', score: 10, desc: 'Позитивность, радость, депрессия' },
+                    { letter: 'C', name: 'Самообладание', score: -30, desc: 'Спокойствие, контроль, нервозность' },
+                    { letter: 'D', name: 'Уверенность', score: -10, desc: 'Предсказуемость, неуверенность' },
+                    { letter: 'E', name: 'Энергия', score: -20, desc: 'Активность, жизненная сила' }
+                ],
+                level2_data: [
+                    { block: 1, title: 'День рождения', digit: 6, score: 80, type: 'Светлая сторона (+)', color: 'bg-emerald-500' },
+                    { block: 2, title: 'Месяц рождения', digit: 7, score: 60, type: 'Теневая сторона (-)', color: 'bg-orange-500' },
+                    { block: 3, title: 'Последняя цифра года', digit: 6, score: 70, type: 'Теневая сторона (-)', color: 'bg-red-500' },
+                    { block: 4, title: 'Код судьбы', digit: 1, score: 60, type: 'Теневая сторона (-)', color: 'bg-orange-600' }
+                ],
+                level3_data: [
+                    { letter: 'A', name: 'Железо / Кислород', score: 75, desc: 'Уровень тканевой гипоксии', color: 'bg-rose-500' },
+                    { letter: 'B', name: 'Углеводный обмен', score: 62, desc: 'Риск инсулинорезистентности', color: 'bg-rose-500' },
+                    { letter: 'C', name: 'Ресурс щитовидной железы', score: 49, desc: 'Энергообмен', color: 'bg-amber-400' }
+                ]
+            }
         ];
 
-        // Загрузка клиентов на старте приложения
-        async function fetchClients() {
-            try {
-                const { data, error } = await db
-                    .from('clients_results')
-                    .select('*')
-                    .order('created_at', { ascending: false });
+        // Запуск при загрузке
+        window.onload = () => {
+            fetchClients();
+        };
 
-                if (error) throw error;
+        // Загрузка клиентов из Supabase
+        async function fetchClients() {
+            showLoading(true);
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/clients_results?order=created_at.desc`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                
+                if (!response.ok) throw new Error('Ошибка загрузки данных');
+                const data = await response.json();
                 
                 clientsList = data || [];
-                // Если база данных пуста, автоматически включаем демо-режим для наглядности
-                if (clientsList.length === 0) {
-                    isDemoMode = true;
-                    updateDemoUI();
-                }
-                
-                applyFiltersAndRender();
+                showLoading(false);
+                renderClientsList();
             } catch (err) {
-                console.error('Ошибка загрузки:', err.message);
-                // В случае ошибки показываем демо-данные, чтобы приложение не ломалось
-                isDemoMode = true;
-                updateDemoUI();
-                applyFiltersAndRender();
+                console.error(err);
+                document.getElementById('loadingIndicator').classList.add('hidden');
+                document.getElementById('errorIndicator').classList.remove('hidden');
+                document.getElementById('errorMsg').innerText = err.message;
             }
         }
 
-        // Переключение демо-режима вручную
-        function toggleDemoMode() {
-            isDemoMode = !isDemoMode;
-            updateDemoUI();
-            applyFiltersAndRender();
+        function showLoading(show) {
+            document.getElementById('loadingIndicator').classList.toggle('hidden', !show);
+            document.getElementById('errorIndicator').classList.add('hidden');
         }
 
-        function updateDemoUI() {
+        // Переключение демо-режима
+        function toggleDemoMode(forceDemo = false) {
+            isDemoMode = forceDemo || !isDemoMode;
             const btn = document.getElementById('demoToggleBtn');
             const txt = document.getElementById('demoToggleText');
+            
             if (isDemoMode) {
                 btn.classList.add('bg-amber-100', 'border-amber-300', 'text-amber-800');
-                btn.classList.remove('bg-white', 'border-slate-200', 'text-slate-600');
+                btn.classList.remove('bg-white', 'hover:bg-slate-50', 'text-slate-600');
                 txt.innerText = 'Показан Демо-режим';
+                document.getElementById('errorIndicator').classList.add('hidden');
             } else {
                 btn.classList.remove('bg-amber-100', 'border-amber-300', 'text-amber-800');
-                btn.classList.add('bg-white', 'border-slate-200', 'text-slate-600');
+                btn.classList.add('bg-white', 'hover:bg-slate-50', 'text-slate-600');
                 txt.innerText = 'Включить Демо-данные';
+                if(clientsList.length === 0) fetchClients();
             }
-        }
-
-        // Поиск и отрисовка списка клиентов
-        function handleSearch() {
-            applyFiltersAndRender();
-        }
-
-        function applyFiltersAndRender() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const sourceList = isDemoMode ? mockDemoClients : clientsList;
-
-            filteredList = sourceList.filter(client => {
-                const name = (client.name || '').toLowerCase();
-                const phone = (client.phone || '');
-                const email = (client.email || '').toLowerCase();
-                return name.includes(query) || phone.includes(query) || email.includes(query);
-            });
-
-            document.getElementById('clientCount').innerText = filteredList.length;
+            
+            activeClient = null;
+            closeDetails();
             renderClientsList();
         }
 
-        // Рендер левой колонки (Список) - ИСПРАВЛЕНА ошибка сравнения ID
+        // Поиск
+        function handleSearch() {
+            searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            renderClientsList();
+        }
+
+        // Форматирование даты
+        function formatDate(iso) {
+            if(!iso) return '';
+            const d = new Date(iso);
+            return d.toLocaleDateString('ru-RU');
+        }
+
+        // Отрисовка левого списка
         function renderClientsList() {
-            const container = document.getElementById('clientsListContainer');
-            if (filteredList.length === 0) {
-                container.innerHTML = `
-                    <div class="p-8 text-center text-slate-400">
-                        <i data-lucide="users" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
-                        <span class="text-sm">Список пуст</span>
-                    </div>`;
-                lucide.createIcons();
+            const tbody = document.getElementById('clientsTableBody');
+            tbody.innerHTML = '';
+            
+            const source = isDemoMode ? mockDemoClients : clientsList;
+            const filtered = source.filter(c => 
+                (c.name || '').toLowerCase().includes(searchQuery) || 
+                (c.phone || '').includes(searchQuery) ||
+                (c.email || '').toLowerCase().includes(searchQuery)
+            );
+
+            document.getElementById('totalCount').innerText = filtered.length;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td class="p-8 text-center text-slate-500">Ничего не найдено</td></tr>`;
                 return;
             }
 
-            container.innerHTML = filteredList.map(client => {
-                // Приводим ID к строке для 100% точного сравнения
-                const isSelected = activeClient && activeClient.id.toString() === client.id.toString();
-                const dateText = client.created_at ? new Date(client.created_at).toLocaleDateString('ru-RU') : 'Нет даты';
-                const isDemo = client.id.toString().startsWith('demo');
+            filtered.forEach(client => {
+                const isSelected = activeClient && String(activeClient.id) === String(client.id);
+                const tr = document.createElement('tr');
+                tr.className = `hover:bg-rose-50 cursor-pointer transition-colors ${isSelected ? 'bg-rose-50 border-l-4 border-[#D37B85]' : 'border-l-4 border-transparent'}`;
+                tr.onclick = () => selectClient(client.id);
                 
-                return `
-                    <div onclick="selectClient('${client.id}')" class="p-4 hover:bg-rose-50/30 cursor-pointer transition-all flex items-center justify-between border-l-4 ${isSelected ? 'bg-rose-50/50 border-[#D37B85]' : 'border-transparent'}">
-                        <div>
-                            <div class="font-medium text-slate-900 flex items-center gap-1.5">
-                                ${client.name || 'Без имени'}
-                                ${isDemo ? '<span class="bg-amber-100 text-amber-800 text-[9px] font-bold px-1.5 py-0.5 rounded">ДЕМО</span>' : ''}
-                            </div>
-                            <div class="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                                <i data-lucide="phone" class="w-3 h-3"></i> ${client.phone || 'Не указан'}
-                            </div>
+                tr.innerHTML = `
+                    <td class="p-4 border-b border-slate-50">
+                        <div class="font-medium text-slate-900">${client.name || 'Без имени'}</div>
+                        <div class="text-slate-500 text-xs mt-1 flex items-center gap-1">
+                            <i data-lucide="phone" class="w-3 h-3"></i> ${client.phone || '—'}
                         </div>
-                        <div class="text-right">
-                            <span class="text-[10px] text-slate-400">${dateText}</span>
-                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 mt-1 ml-auto"></i>
-                        </div>
-                    </div>`;
-            }).join('');
-            
+                    </td>
+                    <td class="p-4 border-b border-slate-50 text-right text-xs text-slate-400">
+                        <div class="mb-1">${formatDate(client.created_at)}</div>
+                        <i data-lucide="chevron-right" class="w-4 h-4 inline-block opacity-50"></i>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
             lucide.createIcons();
         }
 
-        // Клик по пользователю - ИСПРАВЛЕНА ошибка сравнения ID
+        // Клик по клиенту
         function selectClient(id) {
-            const sourceList = isDemoMode ? mockDemoClients : clientsList;
-            
-            // Находим клиента, приводя все ID к типу String
-            activeClient = sourceList.find(c => c.id.toString() === id.toString());
-            
+            const source = isDemoMode ? mockDemoClients : clientsList;
+            activeClient = source.find(c => String(c.id) === String(id));
             if (!activeClient) return;
 
-            // Показываем карточку и скрываем пустое состояние
+            // Переключение мобильных экранов
+            document.getElementById('listContainer').classList.remove('flex');
+            document.getElementById('listContainer').classList.add('hidden', 'lg:flex');
+            document.getElementById('detailContainer').classList.remove('hidden');
+            document.getElementById('detailContainer').classList.add('flex');
+
             document.getElementById('emptyState').classList.add('hidden');
             document.getElementById('clientCard').classList.remove('hidden');
+            document.getElementById('clientCard').classList.add('flex', 'flex-col');
 
-            // Заполняем контакты в шапке
+            // Заполнение заголовка
+            document.getElementById('clientAvatar').innerText = (activeClient.name || 'Б').charAt(0).toUpperCase();
             document.getElementById('clientName').innerText = activeClient.name || 'Без имени';
-            document.getElementById('clientAvatar').innerText = (activeClient.name || 'К').charAt(0);
-            document.getElementById('clientBirth').innerText = activeClient.birth_date || 'Не указана';
-            document.getElementById('clientGender').innerText = activeClient.gender || 'Не указан';
-            document.getElementById('clientPhone').innerText = activeClient.phone || 'Нет телефона';
-            document.getElementById('clientMail').innerText = activeClient.email || 'Нет почты';
+            document.getElementById('clientDob').innerText = activeClient.birth_date || '—';
+            document.getElementById('clientGender').innerText = activeClient.gender || '—';
+            document.getElementById('clientPhone').innerText = activeClient.phone || '—';
+            document.getElementById('clientEmail').innerText = activeClient.email || '—';
 
-            // Перестраиваем активную вкладку
-            renderTabContent();
-            renderClientsList(); // Обновим подсветку выделения
+            renderClientsList(); // Обновить выделение в списке
+            switchTab('level1');
         }
 
-        // Закрыть карточку разбора
+        // Кнопка Назад (на мобильном)
         function closeDetails() {
             activeClient = null;
+            document.getElementById('listContainer').classList.remove('hidden');
+            document.getElementById('listContainer').classList.add('flex');
+            document.getElementById('detailContainer').classList.remove('flex');
+            document.getElementById('detailContainer').classList.add('hidden', 'lg:flex');
+
             document.getElementById('emptyState').classList.remove('hidden');
             document.getElementById('clientCard').classList.add('hidden');
+            document.getElementById('clientCard').classList.remove('flex');
+            
             renderClientsList();
         }
 
-        // Переключение табов
+        // Табы
         function switchTab(tabId) {
             activeTab = tabId;
-            const tabs = ['level1', 'level2', 'level3'];
-            tabs.forEach(t => {
-                const btn = document.getElementById(`tab-${t}`);
-                if (t === tabId) {
-                    btn.classList.add('border-[#D37B85]', 'text-[#D37B85]');
-                    btn.classList.remove('border-transparent', 'text-slate-500', 'hover:text-slate-700');
+            
+            // Визуал кнопок
+            ['level1', 'level2', 'level3'].forEach(id => {
+                const btn = document.getElementById(`tab-${id}`);
+                const content = document.getElementById(`content-${id}`);
+                if (id === tabId) {
+                    btn.className = "pb-3 text-sm font-semibold flex items-center gap-1.5 border-b-2 border-[#D37B85] text-[#D37B85] transition-colors whitespace-nowrap";
+                    content.classList.remove('hidden');
                 } else {
-                    btn.classList.remove('border-[#D37B85]', 'text-[#D37B85]');
-                    btn.classList.add('border-transparent', 'text-slate-500', 'hover:text-slate-700');
+                    btn.className = "pb-3 text-sm font-semibold flex items-center gap-1.5 border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors whitespace-nowrap";
+                    content.classList.add('hidden');
                 }
             });
-            renderTabContent();
+
+            renderLevelData(tabId);
         }
 
-        // Динамический рендер содержимого вкладок результатов
-        function renderTabContent() {
-            const container = document.getElementById('tabContent');
-            if (!activeClient) return;
+        // Рендер данных для выбранной вкладки
+        function renderLevelData(tabId) {
+            const container = document.getElementById(`${tabId}-data-container`);
+            container.innerHTML = '';
+            
+            const data = activeClient[`${tabId}_data`];
 
-            // 1. ПСИХОЛОГИЯ
-            if (activeTab === 'level1') {
-                const data = activeClient.level1_data;
-                if (!data || !Array.isArray(data)) {
-                    container.innerHTML = `<div class="text-sm text-slate-400 p-6 text-center">Данные психологического профиля отсутствуют у этого клиента.</div>`;
-                    return;
-                }
-
-                container.innerHTML = `
-                    <div class="space-y-4">
-                        <h3 class="text-md font-bold text-slate-900 mb-2">Психологический профиль</h3>
-                        ${data.map(item => {
-                            const isNegative = item.score < 0;
-                            return `
-                                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-                                    <div class="w-10 h-10 rounded-lg bg-indigo-500 text-white flex items-center justify-center font-bold text-base shrink-0">
-                                        ${item.letter}
-                                    </div>
-                                    <div class="flex-1">
-                                        <div class="font-semibold text-sm text-slate-900">${item.name}</div>
-                                        <div class="text-[11px] text-slate-500">${item.desc}</div>
-                                    </div>
-                                    <div class="text-md font-bold ${isNegative ? 'text-slate-700' : 'text-indigo-600'}">
-                                        ${item.score}
-                                    </div>
-                                </div>`;
-                        }).join('')}
-                    </div>`;
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                container.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm text-sm">Данные этого уровня еще не заполнены или тест не пройден до конца.</div>`;
+                return;
             }
 
-            // 2. МАТРИЦА ЭНЕРГИЙ
-            if (activeTab === 'level2') {
-                const data = activeClient.level2_data;
-                if (!data || !Array.isArray(data)) {
-                    container.innerHTML = `<div class="text-sm text-slate-400 p-6 text-center">Данные матрицы энергий отсутствуют у этого клиента.</div>`;
-                    return;
-                }
+            let html = '';
 
-                container.innerHTML = `
-                    <div class="space-y-4">
-                        <h3 class="text-md font-bold text-slate-900 mb-2">Матрица энергий</h3>
-                        ${data.map(item => {
-                            const isPlus = item.type.includes('+');
-                            return `
-                                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                                    <div class="${item.color || 'bg-emerald-500'} px-4 py-2.5 text-white flex justify-between items-center text-xs font-bold">
-                                        <span>БЛОК ${item.block}: ${item.title?.toUpperCase()} (Цифра ${item.digit})</span>
-                                    </div>
-                                    <div class="p-4 flex items-center justify-between gap-4">
-                                        <div class="flex-1">
-                                            <div class="font-semibold text-xs text-slate-800 mb-2">${item.type}</div>
-                                            <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                                                <div class="${item.color || 'bg-emerald-500'} h-full rounded-full" style="width: ${item.score}%"></div>
-                                            </div>
-                                        </div>
-                                        <div class="text-md font-bold ${isPlus ? 'text-emerald-500' : 'text-rose-500'}">
-                                            ${item.score}%
-                                        </div>
-                                    </div>
-                                </div>`;
-                        }).join('')}
+            if (tabId === 'level1') {
+                data.forEach(item => {
+                    html += `
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-lg bg-indigo-500 text-white flex items-center justify-center font-bold text-lg shrink-0">${item.letter}</div>
+                        <div class="flex-1">
+                            <div class="font-semibold text-slate-900">${item.name}</div>
+                            <div class="text-xs text-slate-500 mt-0.5">${item.desc}</div>
+                        </div>
+                        <div class="text-xl font-bold ${item.score < 0 ? 'text-slate-700' : 'text-indigo-600'}">${item.score}</div>
                     </div>`;
+                });
+            } 
+            else if (tabId === 'level2') {
+                data.forEach(item => {
+                    const isPlus = (item.type || '').includes('+');
+                    const headerColor = isPlus ? 'bg-emerald-500' : 'bg-rose-500';
+                    const textColor = isPlus ? 'text-emerald-500' : 'text-rose-500';
+                    
+                    html += `
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="${headerColor} px-4 py-3 text-white flex justify-between items-center text-sm md:text-base">
+                            <div class="font-bold">БЛОК ${item.block}: ${item.title} (Цифра ${item.digit})</div>
+                        </div>
+                        <div class="p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
+                            <div class="flex-1">
+                                <div class="font-semibold text-slate-800 mb-2 text-sm">${item.type}</div>
+                                <div class="w-full bg-slate-100 rounded-full h-3">
+                                    <div class="${headerColor} h-3 rounded-full" style="width: ${item.score}%"></div>
+                                </div>
+                            </div>
+                            <div class="text-xl font-bold ${textColor} self-end md:self-auto">${item.score}%</div>
+                        </div>
+                    </div>`;
+                });
+            }
+            else if (tabId === 'level3') {
+                data.forEach(item => {
+                    let barColor = 'bg-blue-400';
+                    if (item.score > 35) barColor = 'bg-amber-400';
+                    if (item.score > 60) barColor = 'bg-rose-500';
+
+                    html += `
+                    <div class="bg-white p-4 md:p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="pr-4">
+                                <div class="font-bold text-slate-900 text-base md:text-lg">Шкала ${item.letter}: ${item.name}</div>
+                                <div class="text-xs md:text-sm text-slate-500 mt-1">${item.desc}</div>
+                            </div>
+                            <div class="text-2xl font-bold ${item.score > 60 ? 'text-rose-500' : 'text-amber-500'}">${item.score}</div>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-3 md:h-4">
+                            <div class="${barColor} h-3 md:h-4 rounded-full transition-all" style="width: ${item.score}%"></div>
+                        </div>
+                    </div>`;
+                });
             }
 
-            // 3. ЧЕК-АП ЗДОРОВЬЯ
-            if (activeTab === 'level3') {
-                const data = activeClient.level3_data;
-                if (!data || !Array.isArray(data)) {
-                    container.innerHTML = `<div class="text-sm text-slate-400 p-6 text-center">Данные чек-апа здоровья отсутствуют у этого клиента.</div>`;
-                    return;
-                }
-
-                container.innerHTML = `
-                    <div class="space-y-4">
-                        <h3 class="text-md font-bold text-slate-900 mb-2">Медицинский Чек-ап</h3>
-                        ${data.map(item => {
-                            return `
-                                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <div>
-                                            <div class="font-bold text-slate-900 text-sm">Шкала ${item.letter}: ${item.name}</div>
-                                            <div class="text-[11px] text-slate-500">${item.desc}</div>
-                                        </div>
-                                        <div class="text-md font-bold text-slate-900">
-                                            ${item.score}
-                                        </div>
-                                    </div>
-                                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                                        <div class="${item.color || 'bg-rose-500'} h-full rounded-full" style="width: ${item.score}%"></div>
-                                    </div>
-                                </div>`;
-                        }).join('')}
-                    </div>`;
-            }
+            container.innerHTML = html;
         }
-
-        // Старт приложения на событии onload
-        window.onload = function() {
-            fetchClients();
-        };
     </script>
 </body>
 </html>
